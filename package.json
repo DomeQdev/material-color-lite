@@ -1,0 +1,25 @@
+{
+    "name": "material-color-lite",
+    "description": "",
+    "license": "Apache-2.0",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/DomeQdev/material-color-lite.git"
+    },
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "devDependencies": {
+        "typescript": "^5.9.2"
+    }
+}
