@@ -65,6 +65,8 @@ const redFromArgb = (argb: number) => (argb >> 16) & 255;
 const greenFromArgb = (argb: number) => (argb >> 8) & 255;
 const blueFromArgb = (argb: number) => argb & 255;
 const lerp = (start: number, stop: number, amount: number) => (1.0 - amount) * start + amount * stop;
+const signum = (num: number): number => (num < 0 ? -1 : num > 0 ? 1 : 0);
+const sanitizeDegreesDouble = (degrees: number) => (degrees + 360.0) % 360.0;
 
 class ViewingConditions {
     static DEFAULT = ViewingConditions.make();
@@ -135,17 +137,17 @@ class Cam16 {
         readonly bstar: number
     ) {}
 
+    distance(other: Cam16): number {
+        const dJ = this.jstar - other.jstar;
+        const dA = this.astar - other.astar;
+        const dB = this.bstar - other.bstar;
+
+        return 1.41 * Math.pow(Math.sqrt(dJ * dJ + dA * dA + dB * dB), 0.63);
+    }
+
     static fromInt(argb: number) {
         const viewingConditions = ViewingConditions.DEFAULT;
-        const red = redFromArgb(argb);
-        const green = greenFromArgb(argb);
-        const blue = blueFromArgb(argb);
-        const redL = linearized(red);
-        const greenL = linearized(green);
-        const blueL = linearized(blue);
-        const x = 0.41233895 * redL + 0.35762064 * greenL + 0.18051042 * blueL;
-        const y = 0.2126 * redL + 0.7152 * greenL + 0.0722 * blueL;
-        const z = 0.01932141 * redL + 0.11916382 * greenL + 0.95034478 * blueL;
+        const [x, y, z] = xyzFromArgb(argb);
         const rC = 0.401288 * x + 0.650173 * y - 0.051461 * z;
         const gC = -0.250268 * x + 1.204414 * y + 0.045854 * z;
         const bC = -0.002079 * x + 0.048952 * y + 0.953127 * z;
@@ -155,16 +157,15 @@ class Cam16 {
         const rAF = Math.pow((viewingConditions.fl * Math.abs(rD)) / 100.0, 0.42);
         const gAF = Math.pow((viewingConditions.fl * Math.abs(gD)) / 100.0, 0.42);
         const bAF = Math.pow((viewingConditions.fl * Math.abs(bD)) / 100.0, 0.42);
-        const rA = (Math.sign(rD) * 400.0 * rAF) / (rAF + 27.13);
-        const gA = (Math.sign(gD) * 400.0 * gAF) / (gAF + 27.13);
-        const bA = (Math.sign(bD) * 400.0 * bAF) / (bAF + 27.13);
-        const a = (11.0 * rA + -12.0 * gA + bA) / 11.0;
-        const b = (rA + gA - 2.0 * bA) / 9.0;
+        const rA = (signum(rD) * 400.0 * rAF) / (rAF + 27.13);
+        const gA = (signum(gD) * 400.0 * gAF) / (gAF + 27.13);
+        const bA = (signum(bD) * 400.0 * bAF) / (bAF + 27.13);
+        const a = (11.0 * rA - 12.0 * gA + bA) / 11.0;
+        const bVal = (rA + gA - 2.0 * bA) / 9.0;
+        const u = (20.0 * rA + 20.0 * gA + 21.0 * bA) / 20.0;
         const p2 = (40.0 * rA + 20.0 * gA + bA) / 20.0;
-        const atan2 = Math.atan2(b, a);
-        const atanDegrees = (atan2 * 180.0) / Math.PI;
-        const hue =
-            atanDegrees < 0 ? atanDegrees + 360.0 : atanDegrees >= 360 ? atanDegrees - 360.0 : atanDegrees;
+        const atanDegrees = (Math.atan2(bVal, a) * 180.0) / Math.PI;
+        const hue = sanitizeDegreesDouble(atanDegrees);
         const hueRadians = (hue * Math.PI) / 180.0;
         const ac = p2 * viewingConditions.nbb;
         const j = 100.0 * Math.pow(ac / viewingConditions.aw, viewingConditions.c * viewingConditions.z);
@@ -176,8 +177,7 @@ class Cam16 {
         const huePrime = hue < 20.14 ? hue + 360 : hue;
         const eHue = 0.25 * (Math.cos((huePrime * Math.PI) / 180.0 + 2.0) + 3.8);
         const p1 = (50000.0 / 13.0) * eHue * viewingConditions.nc * viewingConditions.ncb;
-        const u = (20.0 * rA + 20.0 * gA + 21.0 * bA) / 20.0;
-        const t = (p1 * Math.sqrt(a * a + b * b)) / (u + 0.305);
+        const t = (p1 * Math.sqrt(a * a + bVal * bVal)) / (u + 0.305);
         const alpha = Math.pow(t, 0.9) * Math.pow(1.64 - Math.pow(0.29, viewingConditions.n), 0.73);
         const c = alpha * Math.sqrt(j / 100.0);
         const m = c * viewingConditions.fLRoot;
@@ -228,11 +228,11 @@ class Cam16 {
         const gA = (460.0 * p2 - 891.0 * a - 261.0 * b) / 1403.0;
         const bA = (460.0 * p2 - 220.0 * a - 6300.0 * b) / 1403.0;
         const rCBase = Math.max(0, (27.13 * Math.abs(rA)) / (400.0 - Math.abs(rA)));
-        const rC = Math.sign(rA) * (100.0 / viewingConditions.fl) * Math.pow(rCBase, 1.0 / 0.42);
+        const rC = signum(rA) * (100.0 / viewingConditions.fl) * Math.pow(rCBase, 1.0 / 0.42);
         const gCBase = Math.max(0, (27.13 * Math.abs(gA)) / (400.0 - Math.abs(gA)));
-        const gC = Math.sign(gA) * (100.0 / viewingConditions.fl) * Math.pow(gCBase, 1.0 / 0.42);
+        const gC = signum(gA) * (100.0 / viewingConditions.fl) * Math.pow(gCBase, 1.0 / 0.42);
         const bCBase = Math.max(0, (27.13 * Math.abs(bA)) / (400.0 - Math.abs(bA)));
-        const bC = Math.sign(bA) * (100.0 / viewingConditions.fl) * Math.pow(bCBase, 1.0 / 0.42);
+        const bC = signum(bA) * (100.0 / viewingConditions.fl) * Math.pow(bCBase, 1.0 / 0.42);
         const rF = rC / viewingConditions.rgbD[0];
         const gF = gC / viewingConditions.rgbD[1];
         const bF = bC / viewingConditions.rgbD[2];
@@ -244,58 +244,93 @@ class Cam16 {
     }
 }
 
+const solveHctToInt = (hue: number, chroma: number, tone: number) => {
+    if (chroma < 1.0 || Math.round(tone) <= 0.0 || Math.round(tone) >= 100.0) {
+        return argbFromLstar(tone);
+    }
+
+    hue = sanitizeDegreesDouble(hue);
+
+    let high = chroma;
+    let mid = chroma;
+    let low = 0.0;
+    let isFirstLoop = true;
+
+    let answer: Cam16 | null = null;
+
+    while (Math.abs(low - high) >= 0.4) {
+        const possibleAnswer = findCamByJ(hue, mid, tone);
+
+        if (isFirstLoop) {
+            if (possibleAnswer != null) {
+                return possibleAnswer.toInt();
+            } else {
+                isFirstLoop = false;
+                mid = low + (high - low) / 2.0;
+                continue;
+            }
+        }
+
+        if (possibleAnswer === null) {
+            high = mid;
+        } else {
+            answer = possibleAnswer;
+            low = mid;
+        }
+
+        mid = low + (high - low) / 2.0;
+    }
+
+    if (answer === null) {
+        return argbFromLstar(tone);
+    }
+    return answer.toInt();
+};
+
+const findCamByJ = (hue: number, chroma: number, tone: number) => {
+    let low = 0.0;
+    let high = 100.0;
+    let mid = 0.0;
+    let bestdL = 1000.0;
+    let bestdE = 1000.0;
+    let bestCam: Cam16 | null = null;
+
+    while (Math.abs(low - high) > 0.01) {
+        mid = low + (high - low) / 2.0;
+        const camBeforeGamut = Cam16.fromJch(mid, chroma, hue);
+        const argb = camBeforeGamut.toInt();
+        const camAfterGamut = Cam16.fromInt(argb);
+        const Lstar = lstarFromArgb(argb);
+        const dL = Math.abs(tone - Lstar);
+
+        if (dL < 0.2) {
+            const dE = camBeforeGamut.distance(camAfterGamut);
+            if (dE <= 1.0) {
+                bestdL = dL;
+                bestdE = dE;
+                bestCam = camAfterGamut;
+            }
+        }
+        if (bestdL === 0.0 && bestdE === 0.0) {
+            return bestCam;
+        }
+        if (Lstar < tone) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+
+    return bestCam;
+};
+
 class Hct {
     private internalHue: number;
     private internalChroma: number;
-    private internalTone: number;
     private argb: number;
 
     static from(hue: number, chroma: number, tone: number) {
-        if (chroma < 1.0 || Math.round(tone) <= 0.0 || Math.round(tone) >= 100.0) {
-            return new Hct(argbFromLstar(tone));
-        }
-
-        hue = hue < 0 ? (hue % 360) + 360 : hue >= 360 ? hue % 360 : hue;
-
-        let high = chroma;
-        let mid = chroma;
-        let low = 0.0;
-        let isFirstLoop = true;
-
-        let answer: Cam16 | null = null;
-
-        while (Math.abs(low - high) >= 0.4) {
-            const argb = Cam16.fromJch(tone, mid, hue).toInt();
-
-            if (isFirstLoop) {
-                if (argb !== 0) {
-                    answer = Cam16.fromInt(argb);
-                }
-
-                isFirstLoop = false;
-            }
-
-            if (argb === 0) {
-                high = mid;
-            } else {
-                answer = Cam16.fromInt(argb);
-                const difference = answer.chroma - mid;
-
-                if (Math.abs(difference) < 0.01) {
-                    return new Hct(argb);
-                }
-
-                if (difference > 0) {
-                    high = mid;
-                } else {
-                    low = mid;
-                }
-            }
-
-            mid = low + (high - low) / 2.0;
-        }
-
-        return new Hct(answer?.toInt() || argbFromLstar(tone));
+        return new Hct(solveHctToInt(hue, chroma, tone));
     }
 
     static fromInt(argb: number) {
@@ -315,11 +350,10 @@ class Hct {
     }
 
     private constructor(argb: number) {
-        this.argb = argb;
-        this.internalTone = lstarFromArgb(argb);
         const { hue, chroma } = Cam16.fromInt(argb);
         this.internalHue = hue;
         this.internalChroma = chroma;
+        this.argb = argb;
     }
 }
 
@@ -330,10 +364,7 @@ class TonalPalette {
         return new TonalPalette(hue, chroma);
     }
 
-    private constructor(
-        readonly hue: number,
-        readonly chroma: number
-    ) {}
+    private constructor(readonly hue: number, readonly chroma: number) {}
 
     tone(tone: number) {
         let argb = this.cache.get(tone);
