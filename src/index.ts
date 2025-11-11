@@ -528,8 +528,8 @@ export class LightScheme {
         let color = this.cache.get(role);
         if (color === undefined) {
             color = this.returnRGB
-                ? argbToRgb(darkSchemeMap[role](this.corePalette))
-                : argbToHex(darkSchemeMap[role](this.corePalette));
+                ? argbToRgb(lightSchemeMap[role](this.corePalette))
+                : argbToHex(lightSchemeMap[role](this.corePalette));
             this.cache.set(role, color);
         }
         return color;
