@@ -510,24 +510,214 @@ const darkSchemeMap: Record<ColorRole, (core: CorePalette) => number> = {
     [ColorRole.InversePrimary]: (core) => core.a1.tone(40),
 };
 
-export const generateDarkScheme = <T extends ColorRole>(sourceColor: string, roles: readonly T[]) => {
-    const corePalette = CorePalette.of(hexToArgb(sourceColor));
-    const result = {} as { [K in T]: string };
+export class LightScheme {
+    private readonly corePalette: CorePalette;
+    private readonly cache = new Map<ColorRole, string>();
 
-    for (const role of roles) {
-        result[role] = argbToHex(darkSchemeMap[role](corePalette));
+    constructor(sourceColor: string) {
+        this.corePalette = CorePalette.of(hexToArgb(sourceColor));
     }
 
-    return result;
-};
-
-export const generateLightScheme = <T extends ColorRole>(sourceColor: string, roles: readonly T[]) => {
-    const corePalette = CorePalette.of(hexToArgb(sourceColor));
-    const result = {} as { [K in T]: string };
-
-    for (const role of roles) {
-        result[role] = argbToHex(lightSchemeMap[role](corePalette));
+    private _get(role: ColorRole): string {
+        let color = this.cache.get(role);
+        if (color === undefined) {
+            color = argbToHex(lightSchemeMap[role](this.corePalette));
+            this.cache.set(role, color);
+        }
+        return color;
     }
 
-    return result;
-};
+    get primary() {
+        return this._get(ColorRole.Primary);
+    }
+    get onPrimary() {
+        return this._get(ColorRole.OnPrimary);
+    }
+    get primaryContainer() {
+        return this._get(ColorRole.PrimaryContainer);
+    }
+    get onPrimaryContainer() {
+        return this._get(ColorRole.OnPrimaryContainer);
+    }
+    get secondary() {
+        return this._get(ColorRole.Secondary);
+    }
+    get onSecondary() {
+        return this._get(ColorRole.OnSecondary);
+    }
+    get secondaryContainer() {
+        return this._get(ColorRole.SecondaryContainer);
+    }
+    get onSecondaryContainer() {
+        return this._get(ColorRole.OnSecondaryContainer);
+    }
+    get tertiary() {
+        return this._get(ColorRole.Tertiary);
+    }
+    get onTertiary() {
+        return this._get(ColorRole.OnTertiary);
+    }
+    get tertiaryContainer() {
+        return this._get(ColorRole.TertiaryContainer);
+    }
+    get onTertiaryContainer() {
+        return this._get(ColorRole.OnTertiaryContainer);
+    }
+    get error() {
+        return this._get(ColorRole.Error);
+    }
+    get onError() {
+        return this._get(ColorRole.OnError);
+    }
+    get errorContainer() {
+        return this._get(ColorRole.ErrorContainer);
+    }
+    get onErrorContainer() {
+        return this._get(ColorRole.OnErrorContainer);
+    }
+    get background() {
+        return this._get(ColorRole.Background);
+    }
+    get onBackground() {
+        return this._get(ColorRole.OnBackground);
+    }
+    get surface() {
+        return this._get(ColorRole.Surface);
+    }
+    get onSurface() {
+        return this._get(ColorRole.OnSurface);
+    }
+    get surfaceVariant() {
+        return this._get(ColorRole.SurfaceVariant);
+    }
+    get onSurfaceVariant() {
+        return this._get(ColorRole.OnSurfaceVariant);
+    }
+    get outline() {
+        return this._get(ColorRole.Outline);
+    }
+    get outlineVariant() {
+        return this._get(ColorRole.OutlineVariant);
+    }
+    get shadow() {
+        return this._get(ColorRole.Shadow);
+    }
+    get scrim() {
+        return this._get(ColorRole.Scrim);
+    }
+    get inverseSurface() {
+        return this._get(ColorRole.InverseSurface);
+    }
+    get inverseOnSurface() {
+        return this._get(ColorRole.InverseOnSurface);
+    }
+    get inversePrimary() {
+        return this._get(ColorRole.InversePrimary);
+    }
+}
+
+export class DarkScheme {
+    private readonly corePalette: CorePalette;
+    private readonly cache = new Map<ColorRole, string>();
+
+    constructor(sourceColor: string) {
+        this.corePalette = CorePalette.of(hexToArgb(sourceColor));
+    }
+
+    private _get(role: ColorRole): string {
+        let color = this.cache.get(role);
+        if (color === undefined) {
+            color = argbToHex(darkSchemeMap[role](this.corePalette));
+            this.cache.set(role, color);
+        }
+        return color;
+    }
+
+    get primary() {
+        return this._get(ColorRole.Primary);
+    }
+    get onPrimary() {
+        return this._get(ColorRole.OnPrimary);
+    }
+    get primaryContainer() {
+        return this._get(ColorRole.PrimaryContainer);
+    }
+    get onPrimaryContainer() {
+        return this._get(ColorRole.OnPrimaryContainer);
+    }
+    get secondary() {
+        return this._get(ColorRole.Secondary);
+    }
+    get onSecondary() {
+        return this._get(ColorRole.OnSecondary);
+    }
+    get secondaryContainer() {
+        return this._get(ColorRole.SecondaryContainer);
+    }
+    get onSecondaryContainer() {
+        return this._get(ColorRole.OnSecondaryContainer);
+    }
+    get tertiary() {
+        return this._get(ColorRole.Tertiary);
+    }
+    get onTertiary() {
+        return this._get(ColorRole.OnTertiary);
+    }
+    get tertiaryContainer() {
+        return this._get(ColorRole.TertiaryContainer);
+    }
+    get onTertiaryContainer() {
+        return this._get(ColorRole.OnTertiaryContainer);
+    }
+    get error() {
+        return this._get(ColorRole.Error);
+    }
+    get onError() {
+        return this._get(ColorRole.OnError);
+    }
+    get errorContainer() {
+        return this._get(ColorRole.ErrorContainer);
+    }
+    get onErrorContainer() {
+        return this._get(ColorRole.OnErrorContainer);
+    }
+    get background() {
+        return this._get(ColorRole.Background);
+    }
+    get onBackground() {
+        return this._get(ColorRole.OnBackground);
+    }
+    get surface() {
+        return this._get(ColorRole.Surface);
+    }
+    get onSurface() {
+        return this._get(ColorRole.OnSurface);
+    }
+    get surfaceVariant() {
+        return this._get(ColorRole.SurfaceVariant);
+    }
+    get onSurfaceVariant() {
+        return this._get(ColorRole.OnSurfaceVariant);
+    }
+    get outline() {
+        return this._get(ColorRole.Outline);
+    }
+    get outlineVariant() {
+        return this._get(ColorRole.OutlineVariant);
+    }
+    get shadow() {
+        return this._get(ColorRole.Shadow);
+    }
+    get scrim() {
+        return this._get(ColorRole.Scrim);
+    }
+    get inverseSurface() {
+        return this._get(ColorRole.InverseSurface);
+    }
+    get inverseOnSurface() {
+        return this._get(ColorRole.InverseOnSurface);
+    }
+    get inversePrimary() {
+        return this._get(ColorRole.InversePrimary);
+    }
+}
