@@ -516,7 +516,7 @@ const darkSchemeMap: SchemeMap = {
     [ColorRole.InversePrimary]: (core) => core.primary.tone(40),
 };
 abstract class SchemeBase {
-    readonly corePalette: CorePalette;
+    private readonly corePalette: CorePalette;
     private readonly returnRGB: boolean;
     protected abstract readonly map: SchemeMap;
 
@@ -527,6 +527,12 @@ abstract class SchemeBase {
 
     protected _get(role: ColorRole): string {
         const color = this.map[role](this.corePalette);
+
+        return this.returnRGB ? argbToRgb(color) : argbToHex(color);
+    }
+
+    getTone(tonalPalette: keyof CorePalette, tone: number): string {
+        const color = this.corePalette[tonalPalette].tone(tone);
 
         return this.returnRGB ? argbToRgb(color) : argbToHex(color);
     }
