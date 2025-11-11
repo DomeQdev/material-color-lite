@@ -377,11 +377,11 @@ class TonalPalette {
 }
 
 class CorePalette {
-    a1: TonalPalette;
-    a2: TonalPalette;
-    a3: TonalPalette;
-    n1: TonalPalette;
-    n2: TonalPalette;
+    primary: TonalPalette;
+    secondary: TonalPalette;
+    tertiary: TonalPalette;
+    neutral: TonalPalette;
+    neutralVariant: TonalPalette;
     error: TonalPalette;
 
     static of(argb: number) {
@@ -391,11 +391,11 @@ class CorePalette {
     private constructor(argb: number) {
         const { hue, chroma } = Hct.fromInt(argb);
 
-        this.a1 = TonalPalette.fromHueAndChroma(hue, Math.max(48, chroma));
-        this.a2 = TonalPalette.fromHueAndChroma(hue, 16);
-        this.a3 = TonalPalette.fromHueAndChroma(hue + 60, 24);
-        this.n1 = TonalPalette.fromHueAndChroma(hue, 4);
-        this.n2 = TonalPalette.fromHueAndChroma(hue, 8);
+        this.primary = TonalPalette.fromHueAndChroma(hue, Math.max(48, chroma));
+        this.secondary = TonalPalette.fromHueAndChroma(hue, 16);
+        this.tertiary = TonalPalette.fromHueAndChroma(hue + 60, 24);
+        this.neutral = TonalPalette.fromHueAndChroma(hue, 4);
+        this.neutralVariant = TonalPalette.fromHueAndChroma(hue, 8);
         this.error = TonalPalette.fromHueAndChroma(25, 84);
     }
 }
@@ -450,89 +450,85 @@ export enum ColorRole {
     InversePrimary = "inversePrimary",
 }
 
-const lightSchemeMap: Record<ColorRole, (core: CorePalette) => number> = {
-    [ColorRole.Primary]: (core) => core.a1.tone(40),
-    [ColorRole.OnPrimary]: (core) => core.a1.tone(100),
-    [ColorRole.PrimaryContainer]: (core) => core.a1.tone(90),
-    [ColorRole.OnPrimaryContainer]: (core) => core.a1.tone(10),
-    [ColorRole.Secondary]: (core) => core.a2.tone(40),
-    [ColorRole.OnSecondary]: (core) => core.a2.tone(100),
-    [ColorRole.SecondaryContainer]: (core) => core.a2.tone(90),
-    [ColorRole.OnSecondaryContainer]: (core) => core.a2.tone(10),
-    [ColorRole.Tertiary]: (core) => core.a3.tone(40),
-    [ColorRole.OnTertiary]: (core) => core.a3.tone(100),
-    [ColorRole.TertiaryContainer]: (core) => core.a3.tone(90),
-    [ColorRole.OnTertiaryContainer]: (core) => core.a3.tone(10),
+type SchemeMap = Record<ColorRole, (core: CorePalette) => number>;
+
+const lightSchemeMap: SchemeMap = {
+    [ColorRole.Primary]: (core) => core.primary.tone(40),
+    [ColorRole.OnPrimary]: (core) => core.primary.tone(100),
+    [ColorRole.PrimaryContainer]: (core) => core.primary.tone(90),
+    [ColorRole.OnPrimaryContainer]: (core) => core.primary.tone(10),
+    [ColorRole.Secondary]: (core) => core.secondary.tone(40),
+    [ColorRole.OnSecondary]: (core) => core.secondary.tone(100),
+    [ColorRole.SecondaryContainer]: (core) => core.secondary.tone(90),
+    [ColorRole.OnSecondaryContainer]: (core) => core.secondary.tone(10),
+    [ColorRole.Tertiary]: (core) => core.tertiary.tone(40),
+    [ColorRole.OnTertiary]: (core) => core.tertiary.tone(100),
+    [ColorRole.TertiaryContainer]: (core) => core.tertiary.tone(90),
+    [ColorRole.OnTertiaryContainer]: (core) => core.tertiary.tone(10),
     [ColorRole.Error]: (core) => core.error.tone(40),
     [ColorRole.OnError]: (core) => core.error.tone(100),
     [ColorRole.ErrorContainer]: (core) => core.error.tone(90),
     [ColorRole.OnErrorContainer]: (core) => core.error.tone(10),
-    [ColorRole.Background]: (core) => core.n1.tone(99),
-    [ColorRole.OnBackground]: (core) => core.n1.tone(10),
-    [ColorRole.Surface]: (core) => core.n1.tone(99),
-    [ColorRole.OnSurface]: (core) => core.n1.tone(10),
-    [ColorRole.SurfaceVariant]: (core) => core.n2.tone(90),
-    [ColorRole.OnSurfaceVariant]: (core) => core.n2.tone(30),
-    [ColorRole.Outline]: (core) => core.n2.tone(50),
-    [ColorRole.OutlineVariant]: (core) => core.n2.tone(80),
-    [ColorRole.Shadow]: (core) => core.n1.tone(0),
-    [ColorRole.Scrim]: (core) => core.n1.tone(0),
-    [ColorRole.InverseSurface]: (core) => core.n1.tone(20),
-    [ColorRole.InverseOnSurface]: (core) => core.n1.tone(95),
-    [ColorRole.InversePrimary]: (core) => core.a1.tone(80),
+    [ColorRole.Background]: (core) => core.neutral.tone(99),
+    [ColorRole.OnBackground]: (core) => core.neutral.tone(10),
+    [ColorRole.Surface]: (core) => core.neutral.tone(99),
+    [ColorRole.OnSurface]: (core) => core.neutral.tone(10),
+    [ColorRole.SurfaceVariant]: (core) => core.neutralVariant.tone(90),
+    [ColorRole.OnSurfaceVariant]: (core) => core.neutralVariant.tone(30),
+    [ColorRole.Outline]: (core) => core.neutralVariant.tone(50),
+    [ColorRole.OutlineVariant]: (core) => core.neutralVariant.tone(80),
+    [ColorRole.Shadow]: (core) => core.neutral.tone(0),
+    [ColorRole.Scrim]: (core) => core.neutral.tone(0),
+    [ColorRole.InverseSurface]: (core) => core.neutral.tone(20),
+    [ColorRole.InverseOnSurface]: (core) => core.neutral.tone(95),
+    [ColorRole.InversePrimary]: (core) => core.primary.tone(80),
 };
 
-const darkSchemeMap: Record<ColorRole, (core: CorePalette) => number> = {
-    [ColorRole.Primary]: (core) => core.a1.tone(80),
-    [ColorRole.OnPrimary]: (core) => core.a1.tone(20),
-    [ColorRole.PrimaryContainer]: (core) => core.a1.tone(30),
-    [ColorRole.OnPrimaryContainer]: (core) => core.a1.tone(90),
-    [ColorRole.Secondary]: (core) => core.a2.tone(80),
-    [ColorRole.OnSecondary]: (core) => core.a2.tone(20),
-    [ColorRole.SecondaryContainer]: (core) => core.a2.tone(30),
-    [ColorRole.OnSecondaryContainer]: (core) => core.a2.tone(90),
-    [ColorRole.Tertiary]: (core) => core.a3.tone(80),
-    [ColorRole.OnTertiary]: (core) => core.a3.tone(20),
-    [ColorRole.TertiaryContainer]: (core) => core.a3.tone(30),
-    [ColorRole.OnTertiaryContainer]: (core) => core.a3.tone(90),
+const darkSchemeMap: SchemeMap = {
+    [ColorRole.Primary]: (core) => core.primary.tone(80),
+    [ColorRole.OnPrimary]: (core) => core.primary.tone(20),
+    [ColorRole.PrimaryContainer]: (core) => core.primary.tone(30),
+    [ColorRole.OnPrimaryContainer]: (core) => core.primary.tone(90),
+    [ColorRole.Secondary]: (core) => core.secondary.tone(80),
+    [ColorRole.OnSecondary]: (core) => core.secondary.tone(20),
+    [ColorRole.SecondaryContainer]: (core) => core.secondary.tone(30),
+    [ColorRole.OnSecondaryContainer]: (core) => core.secondary.tone(90),
+    [ColorRole.Tertiary]: (core) => core.tertiary.tone(80),
+    [ColorRole.OnTertiary]: (core) => core.tertiary.tone(20),
+    [ColorRole.TertiaryContainer]: (core) => core.tertiary.tone(30),
+    [ColorRole.OnTertiaryContainer]: (core) => core.tertiary.tone(90),
     [ColorRole.Error]: (core) => core.error.tone(80),
     [ColorRole.OnError]: (core) => core.error.tone(20),
     [ColorRole.ErrorContainer]: (core) => core.error.tone(30),
     [ColorRole.OnErrorContainer]: (core) => core.error.tone(80),
-    [ColorRole.Background]: (core) => core.n1.tone(10),
-    [ColorRole.OnBackground]: (core) => core.n1.tone(90),
-    [ColorRole.Surface]: (core) => core.n1.tone(10),
-    [ColorRole.OnSurface]: (core) => core.n1.tone(90),
-    [ColorRole.SurfaceVariant]: (core) => core.n2.tone(30),
-    [ColorRole.OnSurfaceVariant]: (core) => core.n2.tone(80),
-    [ColorRole.Outline]: (core) => core.n2.tone(60),
-    [ColorRole.OutlineVariant]: (core) => core.n2.tone(30),
-    [ColorRole.Shadow]: (core) => core.n1.tone(0),
-    [ColorRole.Scrim]: (core) => core.n1.tone(0),
-    [ColorRole.InverseSurface]: (core) => core.n1.tone(90),
-    [ColorRole.InverseOnSurface]: (core) => core.n1.tone(20),
-    [ColorRole.InversePrimary]: (core) => core.a1.tone(40),
+    [ColorRole.Background]: (core) => core.neutral.tone(10),
+    [ColorRole.OnBackground]: (core) => core.neutral.tone(90),
+    [ColorRole.Surface]: (core) => core.neutral.tone(10),
+    [ColorRole.OnSurface]: (core) => core.neutral.tone(90),
+    [ColorRole.SurfaceVariant]: (core) => core.neutralVariant.tone(30),
+    [ColorRole.OnSurfaceVariant]: (core) => core.neutralVariant.tone(80),
+    [ColorRole.Outline]: (core) => core.neutralVariant.tone(60),
+    [ColorRole.OutlineVariant]: (core) => core.neutralVariant.tone(30),
+    [ColorRole.Shadow]: (core) => core.neutral.tone(0),
+    [ColorRole.Scrim]: (core) => core.neutral.tone(0),
+    [ColorRole.InverseSurface]: (core) => core.neutral.tone(90),
+    [ColorRole.InverseOnSurface]: (core) => core.neutral.tone(20),
+    [ColorRole.InversePrimary]: (core) => core.primary.tone(40),
 };
-
-export class LightScheme {
-    private readonly corePalette: CorePalette;
-    private readonly cache = new Map<ColorRole, string>();
+abstract class SchemeBase {
+    readonly corePalette: CorePalette;
     private readonly returnRGB: boolean;
+    protected abstract readonly map: SchemeMap;
 
-    constructor(sourceHexColor: string, returnRGB: boolean = false) {
+    constructor(sourceHexColor: string, returnRGB = false) {
         this.corePalette = CorePalette.of(hexToArgb(sourceHexColor));
         this.returnRGB = returnRGB;
     }
 
-    private _get(role: ColorRole): string {
-        let color = this.cache.get(role);
-        if (color === undefined) {
-            color = this.returnRGB
-                ? argbToRgb(lightSchemeMap[role](this.corePalette))
-                : argbToHex(lightSchemeMap[role](this.corePalette));
-            this.cache.set(role, color);
-        }
-        return color;
+    protected _get(role: ColorRole): string {
+        const color = this.map[role](this.corePalette);
+
+        return this.returnRGB ? argbToRgb(color) : argbToHex(color);
     }
 
     get primary() {
@@ -624,112 +620,10 @@ export class LightScheme {
     }
 }
 
-export class DarkScheme {
-    private readonly corePalette: CorePalette;
-    private readonly cache = new Map<ColorRole, string>();
-    private readonly returnRGB: boolean;
+export class LightScheme extends SchemeBase {
+    protected readonly map = lightSchemeMap;
+}
 
-    constructor(sourceHexColor: string, returnRGB: boolean = false) {
-        this.corePalette = CorePalette.of(hexToArgb(sourceHexColor));
-        this.returnRGB = returnRGB;
-    }
-
-    private _get(role: ColorRole): string {
-        let color = this.cache.get(role);
-        if (color === undefined) {
-            color = this.returnRGB
-                ? argbToRgb(darkSchemeMap[role](this.corePalette))
-                : argbToHex(darkSchemeMap[role](this.corePalette));
-            this.cache.set(role, color);
-        }
-        return color;
-    }
-
-    get primary() {
-        return this._get(ColorRole.Primary);
-    }
-    get onPrimary() {
-        return this._get(ColorRole.OnPrimary);
-    }
-    get primaryContainer() {
-        return this._get(ColorRole.PrimaryContainer);
-    }
-    get onPrimaryContainer() {
-        return this._get(ColorRole.OnPrimaryContainer);
-    }
-    get secondary() {
-        return this._get(ColorRole.Secondary);
-    }
-    get onSecondary() {
-        return this._get(ColorRole.OnSecondary);
-    }
-    get secondaryContainer() {
-        return this._get(ColorRole.SecondaryContainer);
-    }
-    get onSecondaryContainer() {
-        return this._get(ColorRole.OnSecondaryContainer);
-    }
-    get tertiary() {
-        return this._get(ColorRole.Tertiary);
-    }
-    get onTertiary() {
-        return this._get(ColorRole.OnTertiary);
-    }
-    get tertiaryContainer() {
-        return this._get(ColorRole.TertiaryContainer);
-    }
-    get onTertiaryContainer() {
-        return this._get(ColorRole.OnTertiaryContainer);
-    }
-    get error() {
-        return this._get(ColorRole.Error);
-    }
-    get onError() {
-        return this._get(ColorRole.OnError);
-    }
-    get errorContainer() {
-        return this._get(ColorRole.ErrorContainer);
-    }
-    get onErrorContainer() {
-        return this._get(ColorRole.OnErrorContainer);
-    }
-    get background() {
-        return this._get(ColorRole.Background);
-    }
-    get onBackground() {
-        return this._get(ColorRole.OnBackground);
-    }
-    get surface() {
-        return this._get(ColorRole.Surface);
-    }
-    get onSurface() {
-        return this._get(ColorRole.OnSurface);
-    }
-    get surfaceVariant() {
-        return this._get(ColorRole.SurfaceVariant);
-    }
-    get onSurfaceVariant() {
-        return this._get(ColorRole.OnSurfaceVariant);
-    }
-    get outline() {
-        return this._get(ColorRole.Outline);
-    }
-    get outlineVariant() {
-        return this._get(ColorRole.OutlineVariant);
-    }
-    get shadow() {
-        return this._get(ColorRole.Shadow);
-    }
-    get scrim() {
-        return this._get(ColorRole.Scrim);
-    }
-    get inverseSurface() {
-        return this._get(ColorRole.InverseSurface);
-    }
-    get inverseOnSurface() {
-        return this._get(ColorRole.InverseOnSurface);
-    }
-    get inversePrimary() {
-        return this._get(ColorRole.InversePrimary);
-    }
+export class DarkScheme extends SchemeBase {
+    protected readonly map = darkSchemeMap;
 }
