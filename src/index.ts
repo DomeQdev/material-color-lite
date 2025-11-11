@@ -404,6 +404,10 @@ const argbToHex = (argb: number) => {
     return `#${(argb & 0x00ffffff).toString(16).padStart(6, "0")}`;
 };
 
+const argbToRgb = (argb: number) => {
+    return `rgb(${redFromArgb(argb)}, ${greenFromArgb(argb)}, ${blueFromArgb(argb)})`;
+};
+
 const hexToArgb = (hex: string) => {
     const hexValue = hex.startsWith("#") ? hex.slice(1) : hex;
 
@@ -513,15 +517,19 @@ const darkSchemeMap: Record<ColorRole, (core: CorePalette) => number> = {
 export class LightScheme {
     private readonly corePalette: CorePalette;
     private readonly cache = new Map<ColorRole, string>();
+    private readonly returnRGB: boolean;
 
-    constructor(sourceColor: string) {
-        this.corePalette = CorePalette.of(hexToArgb(sourceColor));
+    constructor(sourceHexColor: string, returnRGB: boolean = false) {
+        this.corePalette = CorePalette.of(hexToArgb(sourceHexColor));
+        this.returnRGB = returnRGB;
     }
 
     private _get(role: ColorRole): string {
         let color = this.cache.get(role);
         if (color === undefined) {
-            color = argbToHex(lightSchemeMap[role](this.corePalette));
+            color = this.returnRGB
+                ? argbToRgb(darkSchemeMap[role](this.corePalette))
+                : argbToHex(darkSchemeMap[role](this.corePalette));
             this.cache.set(role, color);
         }
         return color;
@@ -619,15 +627,19 @@ export class LightScheme {
 export class DarkScheme {
     private readonly corePalette: CorePalette;
     private readonly cache = new Map<ColorRole, string>();
+    private readonly returnRGB: boolean;
 
-    constructor(sourceColor: string) {
-        this.corePalette = CorePalette.of(hexToArgb(sourceColor));
+    constructor(sourceHexColor: string, returnRGB: boolean = false) {
+        this.corePalette = CorePalette.of(hexToArgb(sourceHexColor));
+        this.returnRGB = returnRGB;
     }
 
     private _get(role: ColorRole): string {
         let color = this.cache.get(role);
         if (color === undefined) {
-            color = argbToHex(darkSchemeMap[role](this.corePalette));
+            color = this.returnRGB
+                ? argbToRgb(darkSchemeMap[role](this.corePalette))
+                : argbToHex(darkSchemeMap[role](this.corePalette));
             this.cache.set(role, color);
         }
         return color;
